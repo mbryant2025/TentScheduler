@@ -2,8 +2,10 @@ import statistics
 import copy
 from itertools import combinations
 import numpy as np
+import pandas as pd
 
 DAYS_PER_WEEK = 7
+DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 class Person:
     def __init__(self, name, avail_mask: np.ndarray, time_slots=1):
@@ -78,10 +80,19 @@ class Schedule:
                 person.unassign_shift(day, time_idx)
 
     def __repr__(self) -> str:
-        return f'Balanced Schedule: {self.get_balance()}\n' + '\n'.join([str(person) for person in self.people]) + '\n\n'
+        return f'Schedule balance: {self.get_balance()}'
     
-    def find_schedules(self, top=10):
+    def find_schedules(self, display_fn, top=10):
         balanced_schedules = []
         self.assign_shifts(balanced_schedules, top=top)
-        print(balanced_schedules)
-    
+        
+        # Make dataframe with self.days columns and self.time_slots rows
+        df = pd.DataFrame(columns=DAYS_OF_WEEK, index=range(self.time_slots))
+
+        for schedule in balanced_schedules:
+            print(schedule)
+            for day in range(self.days):
+                for time_idx in range(self.time_slots):
+                    df[DAYS_OF_WEEK[day]][time_idx] = ', '.join([person.name for person in schedule.people if person.working_days[time_idx][day]])
+            display_fn(df)
+            print('\n')
